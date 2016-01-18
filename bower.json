@@ -1,0 +1,37 @@
+{
+  "name": "ionic-fp-push",
+  "description": "Use the PhoneGap Push plugin in Ionic applications",
+  "homepage": "https://github.com/fingerproof/ionic-fp-push",
+  "main": [
+    "fp.push/push.js",
+    "fp.push/push.service.js"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "Angular",
+    "Ionic",
+    "Cordova",
+    "mobile",
+    "application",
+    "push",
+    "notifications",
+    "notification",
+    "plugin"
+  ],
+  "authors": [
+    "Sebastien Pittion <sp@fing.pro> (https://twitter.com/fingerproof)"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "lodash": "3.10.1",
+    "ionic": "1.1.1",
+    "ngCordova": "0.1.23-alpha",
+    "ionic-fp-utils": "0.1.1"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+bower_components/
+**/.sublime-gulp.cache
+**/sublime-gulp.log
+**/npm-debug.log
