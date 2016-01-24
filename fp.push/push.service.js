@@ -117,16 +117,18 @@
         return $cordovaPushV5.initialize(settings);
       }).then(function (pushPlugin) {
         plugin = pushPlugin;
-        var deferred = $q.defer();
-        plugin.on('error', deferred.reject);
-        $cordovaPushV5.register().then(deferred.resolve);
-        function cleanup() { plugin.off('error', deferred.reject); }
-        return deferred.promise.finally(cleanup);
-      }).then(function (token) {
-        getCache().put('deviceToken', token);
-        $cordovaPushV5.onNotification();
         $cordovaPushV5.onError();
-        return token;
+        $cordovaPushV5.onNotification();
+        return $q(function (resolve, reject) {
+          plugin.on('error', reject);
+          function removeHandler() { plugin.off('error', reject); }
+          $cordovaPushV5.register().then(resolve).finally(removeHandler);
+        });
+      }).then(function (token) {
+        return getCache().put('deviceToken', token);
+      }).catch(function (error) {
+        function restoreChain() { return $q.reject(error); }
+        return service.unregister().then(restoreChain);
       });
     });
 

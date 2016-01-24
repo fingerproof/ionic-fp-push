@@ -12,3 +12,6 @@ rules:
   max-statements: 0
   no-var: 0
   padded-blocks: 0
+  max-nested-callbacks:
+    - 2
+    - 3
