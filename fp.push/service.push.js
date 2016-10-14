@@ -266,7 +266,7 @@
 
   module.service('pushService', [
     '$q',
-    '$window'
+    '$window',
     '$cordovaPushV5',
     'cacheUtils',
     'cordovaUtils',
