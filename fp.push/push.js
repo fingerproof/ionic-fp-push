@@ -6,7 +6,7 @@
 
   /**
    * Some push default settings.
-   * @constant PUSH_DEFAULT_SETTINGS
+   * @constant
    * @type {Object}
    */
   var PUSH_DEFAULT_SETTINGS = {
@@ -24,16 +24,27 @@
 
   /**
    * Push error messages.
-   * @constant PUSH_ERRORS
+   * @constant
    * @type {Object}
    */
   var PUSH_ERRORS = {
     MISSING_GLOBALS: 'missing the phonegap-plugin-push, ionic or lodash',
-    // Same error as $cordovaPushV5 throws.
+    // Same error that $cordovaPushV5 throws.
     NOT_INITIALIZED: 'init must be called before any other operation'
+  };
+
+  /**
+   * Push event names.
+   * @constant
+   * @type {Object}
+   */
+  var PUSH_EVENTS = {
+    ON_NOTIFICATION: '$cordovaPushV5:notificationReceived',
+    ON_ERROR: '$cordovaPushV5:errorOccurred'
   };
 
   module.constant('PUSH_DEFAULT_SETTINGS', PUSH_DEFAULT_SETTINGS);
   module.constant('PUSH_ERRORS', PUSH_ERRORS);
+  module.constant('PUSH_EVENTS', PUSH_EVENTS);
 
 }(angular.module('fp.push', ['fp.utils'])));
