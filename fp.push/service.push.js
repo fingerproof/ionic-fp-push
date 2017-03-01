@@ -34,7 +34,7 @@
     var ionic = $window.ionic;
     var _ = $window._;
 
-    if (!PushNotification || !ionic || !_) {
+    if (cordovaUtils.isCordova() && !PushNotification || !ionic || !_) {
       throw new Error(PUSH_ERRORS.MISSING_GLOBALS);
     }
 
