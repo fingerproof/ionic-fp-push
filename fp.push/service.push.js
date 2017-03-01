@@ -6,23 +6,27 @@
 
   /**
    * The push notifications service.
-   * @constructor PushService
+   * @constructor
    * @param {Object} $q - The Angular $q service.
    * @param {Object} $window - The Angular $window service.
+   * @param {Object} $rootScope - The Angular $rootScope service.
    * @param {Object} $cordovaPushV5 - The Ionic $cordovaPushV5 service.
    * @param {Object} cacheUtils - Some caching utilities.
    * @param {Object} cordovaUtils - Some Cordova utilities.
    * @param {Object} PUSH_DEFAULT_SETTINGS - Some push default settings.
    * @param {Object} PUSH_ERRORS - Push error messages.
+   * @param {Object} PUSH_EVENTS - Push event names.
    */
   function PushService(
     $q,
     $window,
+    $rootScope,
     $cordovaPushV5,
     cacheUtils,
     cordovaUtils,
     PUSH_DEFAULT_SETTINGS,
-    PUSH_ERRORS
+    PUSH_ERRORS,
+    PUSH_EVENTS
   ) {
     var service = this;
 
@@ -37,6 +41,7 @@
     /**
      * Device token cache key.
      * @private
+     * @constant
      * @type {String}
      */
     var DEVICE_TOKEN_CACHE_KEY = 'deviceToken';
@@ -49,9 +54,22 @@
     var plugin = null;
 
     /**
+     * Attach an event listener to the root scope
+     * setting `$event` as the handler second parameter.
+     * @private
+     * @function
+     * @param {String} event - An event name.
+     * @param {Function} handler - An event handler.
+     * @return {Function} Deregistration function.
+     */
+    function listenTo(event, handler) {
+      return $rootScope.$on(event, _.rearg(handler, 1, 0));
+    }
+
+    /**
      * Get or create a cache.
      * @private
-     * @function getCache
+     * @function
      * @return {Object}
      */
     function getCache() { return cacheUtils.getModuleCache(module); }
@@ -59,7 +77,7 @@
     /**
      * Check whether or not the device is registered, rejecting with an error.
      * @private
-     * @function checkRegistration
+     * @function
      * @param {Function} reject - A promise reject function.
      * @return {Boolean}
      */
@@ -72,7 +90,7 @@
     /**
      * Check if the device is running a given platform, using a fallback value.
      * @private
-     * @function checkPlatform
+     * @function
      * @param {String} name - The platform name.
      * @param {Function} resolve - A promise resolve function.
      * @param {*} [fallback] - A fallback value to resolve with.
@@ -88,7 +106,7 @@
     /**
      * Same as `checkPlatform` but must match one of the given platforms.
      * @private
-     * @function checkPlatforms
+     * @function
      * @param {Array} names - The platform names.
      * @param {Function} resolve - A promise resolve function.
      * @param {*} [fallback] - A fallback value to resolve with.
@@ -99,8 +117,21 @@
     }
 
     /**
+     * Attach an event handler that will be called on every notification.
+     * @param {Function} handler - Passing $event and the notification.
+     * @return {Function} Deregistration function for the listener.
+     */
+    service.onNotification = _.partial(listenTo, PUSH_EVENTS.ON_NOTIFICATION);
+
+    /**
+     * Attach an event handler that will be called on every error.
+     * @param {Function} handler - Passing $event and the error.
+     * @return {Function} Deregistration function for the listener.
+     */
+    service.onError = _.partial(listenTo, PUSH_EVENTS.ON_ERROR);
+
+    /**
      * Get the cached device token, if any.
-     * @method getDeviceToken
      * @return {String|undefined}
      */
     service.getDeviceToken = function () {
@@ -109,7 +140,6 @@
 
     /**
      * Check whether or not the device is registered.
-     * @method isRegistered
      * @return {Boolean}
      */
     service.isRegistered = function () {
@@ -118,7 +148,6 @@
 
     /**
      * Check whether or not the user allowed the app to get notifications.
-     * @method checkPermission
      * @return {Promise} Passing `true` if allowed, `false` if not, or `null`.
      */
     service.checkPermission = cordovaUtils.whenReady(function () {
@@ -131,7 +160,6 @@
 
     /**
      * Register the device to receive push notifications, get the device token.
-     * @method register
      * @param {Object} [options=PUSH_DEFAULT_SETTINGS] - Push plugin settings.
      * @param {String} options.android.senderID - Mandatory on Android.
      * @return {Promise} Passing `{ current, previous, hasChanged }`.
@@ -161,7 +189,6 @@
 
     /**
      * Unregister the device so that it won't receive push notifications.
-     * @method unregister
      * @return {Promise} Passing the device token if any.
      */
     service.unregister = cordovaUtils.whenReady(function () {
@@ -174,7 +201,6 @@
 
     /**
      * Subscribe to a new notifications topic.
-     * @method subscribe
      * @param {String} topic - The topic to subscribe to.
      * @return {Promise}
      */
@@ -187,7 +213,6 @@
 
     /**
      * Unsubscribe from a given notifications topic.
-     * @method unsubscribe
      * @param {String} topic - The topic to unsubscribe from.
      * @return {Promise}
      */
@@ -200,7 +225,6 @@
 
     /**
      * Get current application icon badge value.
-     * @method getBadgeNumber
      * @return {Promise} Passing the number or `-1` if not supported.
      */
     service.getBadgeNumber = cordovaUtils.whenReady(function () {
@@ -212,7 +236,6 @@
 
     /**
      * Set the application icon badge value.
-     * @method setBadgeNumber
      * @param {Number} [number=0]
      * @return {Promise} Passing the number or `-1` if not supported.
      */
@@ -227,7 +250,6 @@
 
     /**
      * Increment the current application icon badge value.
-     * @method incrementBadgeNumber
      * @param {Number} [number=1]
      * @return {Promise} Passing the number.
      */
@@ -240,7 +262,6 @@
 
     /**
      * Tell the OS when a background push notification has been handled.
-     * @method notificationHandled
      * @return {Promise}
      */
     service.notificationHandled = cordovaUtils.whenReady(function () {
@@ -252,7 +273,6 @@
 
     /**
      * Clear all notifications from the notification center.
-     * @method clearNotifications
      * @return {Promise}
      */
     service.clearNotifications = cordovaUtils.whenReady(function () {
@@ -267,11 +287,13 @@
   module.service('pushService', [
     '$q',
     '$window',
+    '$rootScope',
     '$cordovaPushV5',
     'cacheUtils',
     'cordovaUtils',
     'PUSH_DEFAULT_SETTINGS',
     'PUSH_ERRORS',
+    'PUSH_EVENTS',
     PushService
   ]);
 
