@@ -124,8 +124,8 @@
     service.checkPermission = cordovaUtils.whenReady(function () {
       return $q(function (resolve, reject) {
         if (!checkPlatforms(['ios', 'android'], resolve, null)) { return; }
-        var success = function (data) { resolve(data.isEnabled); }
-        PushNotification.hasPermission(success, reject);
+        var ok = function (push) { resolve(push.isEnabled); };
+        PushNotification.hasPermission(ok, reject);
       });
     });
 
@@ -134,7 +134,7 @@
      * @method register
      * @param {Object} [options=PUSH_DEFAULT_SETTINGS] - Push plugin settings.
      * @param {String} options.android.senderID - Mandatory on Android.
-     * @return {Promise} Passing `{ value: String, hasChanged: Boolean }`.
+     * @return {Promise} Passing `{ current, previous, hasChanged }`.
      */
     service.register = cordovaUtils.whenReady(function (options) {
       return service.unregister().then(function () {
@@ -149,10 +149,10 @@
           function off() { plugin.off('error', reject); }
           $cordovaPushV5.register().then(resolve).catch(reject).finally(off);
         });
-      }).then(function (deviceToken) {
-        var stored = service.getDeviceToken();
+      }).then(function (token) {
+        var old = service.getDeviceToken();
         getCache().put(DEVICE_TOKEN_CACHE_KEY, token);
-        return { value: deviceToken, hasChanged: deviceToken !== stored };
+        return { current: token, previous: old, hasChanged: token !== old };
       }).catch(function (error) {
         function restore() { return $q.reject(error); }
         return service.unregister().then(restore);
@@ -220,8 +220,8 @@
       if (!arguments.length) { number = 0; }
       return $q(function (resolve, reject) {
         if (!checkPlatforms(['ios', 'android'], resolve, -1)) { return; }
-        var success = function () { resolve(number); };
-        return $cordovaPushV5.setBadgeNumber(number).then(success);
+        var ok = function () { resolve(number); };
+        return $cordovaPushV5.setBadgeNumber(number).then(ok).catch(reject);
       });
     });
 
