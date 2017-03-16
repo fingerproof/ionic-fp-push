@@ -10,10 +10,10 @@
    * @param {Object} $q - The Angular $q service.
    * @param {Object} $window - The Angular $window service.
    * @param {Object} $rootScope - The Angular $rootScope service.
-   * @param {Object} $pushV5 - The Ionic $cordovaPushV5 service.
+   * @param {Object} $pushV5 - The ngCordova $cordovaPushV5 service.
    * @param {Object} cacheUtils - Some caching utilities.
    * @param {Object} cordovaUtils - Some Cordova utilities.
-   * @param {Object} DEFAULT_SETTINGS - Some push default settings.
+   * @param {Object} DEFAULT_SETTINGS - Push default settings.
    * @param {Object} ERRORS - Push error messages.
    * @param {Object} EVENTS - Push event names.
    */
@@ -55,11 +55,11 @@
 
     /**
      * Attach an event listener to the root scope
-     * setting `$event` as the handler second parameter.
+     * passing `$event` as the handler second parameter.
      * @private
      * @function
-     * @param {String} event - An event name.
-     * @param {Function} handler - An event handler.
+     * @param {String} event - Event name.
+     * @param {Function} handler - Event handler.
      * @return {Function} Deregistration function.
      */
     function listenTo(event, handler) {
@@ -67,7 +67,7 @@
     }
 
     /**
-     * Get or create a cache.
+     * Get or create the module cache.
      * @private
      * @function
      * @return {Object}
@@ -75,7 +75,7 @@
     function getCache() { return cacheUtils.getModuleCache(module); }
 
     /**
-     * Check whether or not the device is registered, rejecting with an error.
+     * Check whether or not the device is registered, rejecting if not.
      * @private
      * @function
      * @param {Function} reject - A promise reject function.
@@ -118,14 +118,14 @@
 
     /**
      * Attach an event handler that will be called on every notification.
-     * @param {Function} handler - Passing $event and the notification.
+     * @param {Function} handler - Passing the notification and $event.
      * @return {Function} Deregistration function for the listener.
      */
     service.onNotification = _.partial(listenTo, EVENTS.ON_NOTIFICATION);
 
     /**
      * Attach an event handler that will be called on every error.
-     * @param {Function} handler - Passing $event and the error.
+     * @param {Function} handler - Passing the error and $event.
      * @return {Function} Deregistration function for the listener.
      */
     service.onError = _.partial(listenTo, EVENTS.ON_ERROR);
@@ -145,7 +145,7 @@
     service.isRegistered = function () { return !!plugin; };
 
     /**
-     * Check whether or not the user allowed the app to get notifications.
+     * Check whether or not the user allowed the app to receive notifications.
      * @return {Promise} Passing `true` if allowed, `false` if not, or `null`.
      */
     service.checkPermission = cordovaUtils.whenReady(function () {
@@ -157,7 +157,7 @@
     });
 
     /**
-     * Register the device to receive push notifications, get the device token.
+     * Register the device to receive notifications, get the device token.
      * @param {Object} [options=DEFAULT_SETTINGS] - Push plugin settings.
      * @param {String} options.android.senderID - Mandatory on Android.
      * @return {Promise} Passing `{ current, previous, hasChanged }`.
@@ -186,8 +186,8 @@
     });
 
     /**
-     * Unregister the device so that it won't receive push notifications.
-     * @return {Promise} Passing the device token if any.
+     * Unregister the device so that it won't receive notifications anymore.
+     * @return {Promise} Passing the device token, if any.
      */
     service.unregister = cordovaUtils.whenReady(function () {
       var promise = service.isRegistered() ? $pushV5.unregister() : $q.when();
@@ -199,7 +199,7 @@
 
     /**
      * Subscribe to a new notifications topic.
-     * @param {String} topic - The topic to subscribe to.
+     * @param {String} topic - The topic name to subscribe to.
      * @return {Promise}
      */
     service.subscribe = cordovaUtils.whenReady(function (topic) {
@@ -211,7 +211,7 @@
 
     /**
      * Unsubscribe from a given notifications topic.
-     * @param {String} topic - The topic to unsubscribe from.
+     * @param {String} topic - The topic name to unsubscribe from.
      * @return {Promise}
      */
     service.unsubscribe = cordovaUtils.whenReady(function (topic) {
@@ -222,7 +222,7 @@
     });
 
     /**
-     * Get current application icon badge value.
+     * Get the current application icon badge value.
      * @return {Promise} Passing the number or `-1` if not supported.
      */
     service.getBadgeNumber = cordovaUtils.whenReady(function () {
