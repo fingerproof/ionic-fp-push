@@ -10,23 +10,23 @@
    * @param {Object} $q - The Angular $q service.
    * @param {Object} $window - The Angular $window service.
    * @param {Object} $rootScope - The Angular $rootScope service.
-   * @param {Object} $cordovaPushV5 - The Ionic $cordovaPushV5 service.
+   * @param {Object} $pushV5 - The Ionic $cordovaPushV5 service.
    * @param {Object} cacheUtils - Some caching utilities.
    * @param {Object} cordovaUtils - Some Cordova utilities.
-   * @param {Object} PUSH_DEFAULT_SETTINGS - Some push default settings.
-   * @param {Object} PUSH_ERRORS - Push error messages.
-   * @param {Object} PUSH_EVENTS - Push event names.
+   * @param {Object} DEFAULT_SETTINGS - Some push default settings.
+   * @param {Object} ERRORS - Push error messages.
+   * @param {Object} EVENTS - Push event names.
    */
   function PushService(
     $q,
     $window,
     $rootScope,
-    $cordovaPushV5,
+    $pushV5,
     cacheUtils,
     cordovaUtils,
-    PUSH_DEFAULT_SETTINGS,
-    PUSH_ERRORS,
-    PUSH_EVENTS
+    DEFAULT_SETTINGS,
+    ERRORS,
+    EVENTS
   ) {
     var service = this;
 
@@ -35,7 +35,7 @@
     var _ = $window._;
 
     if (cordovaUtils.isCordova() && !PushNotification || !ionic || !_) {
-      throw new Error(PUSH_ERRORS.MISSING_GLOBALS);
+      throw new Error(ERRORS.MISSING_GLOBALS);
     }
 
     /**
@@ -83,7 +83,7 @@
      */
     function checkRegistration(reject) {
       if (service.isRegistered()) { return true; }
-      reject(new Error(PUSH_ERRORS.NOT_INITIALIZED));
+      reject(new Error(ERRORS.NOT_INITIALIZED));
       return false;
     }
 
@@ -121,14 +121,14 @@
      * @param {Function} handler - Passing $event and the notification.
      * @return {Function} Deregistration function for the listener.
      */
-    service.onNotification = _.partial(listenTo, PUSH_EVENTS.ON_NOTIFICATION);
+    service.onNotification = _.partial(listenTo, EVENTS.ON_NOTIFICATION);
 
     /**
      * Attach an event handler that will be called on every error.
      * @param {Function} handler - Passing $event and the error.
      * @return {Function} Deregistration function for the listener.
      */
-    service.onError = _.partial(listenTo, PUSH_EVENTS.ON_ERROR);
+    service.onError = _.partial(listenTo, EVENTS.ON_ERROR);
 
     /**
      * Get the cached device token, if any.
@@ -142,9 +142,7 @@
      * Check whether or not the device is registered.
      * @return {Boolean}
      */
-    service.isRegistered = function () {
-      return !!(plugin && service.getDeviceToken());
-    };
+    service.isRegistered = function () { return !!plugin; };
 
     /**
      * Check whether or not the user allowed the app to get notifications.
@@ -160,25 +158,25 @@
 
     /**
      * Register the device to receive push notifications, get the device token.
-     * @param {Object} [options=PUSH_DEFAULT_SETTINGS] - Push plugin settings.
+     * @param {Object} [options=DEFAULT_SETTINGS] - Push plugin settings.
      * @param {String} options.android.senderID - Mandatory on Android.
      * @return {Promise} Passing `{ current, previous, hasChanged }`.
      */
     service.register = cordovaUtils.whenReady(function (options) {
-      return service.unregister().then(function () {
-        var settings = _.merge({}, PUSH_DEFAULT_SETTINGS, options);
-        return $cordovaPushV5.initialize(settings);
+      var old = undefined;
+      return service.unregister().then(function (token) {
+        if (token) { old = token; }
+        return $pushV5.initialize(_.merge({}, DEFAULT_SETTINGS, options));
       }).then(function (instance) {
         plugin = instance;
-        $cordovaPushV5.onError();
-        $cordovaPushV5.onNotification();
+        $pushV5.onError();
+        $pushV5.onNotification();
         return $q(function (resolve, reject) {
           plugin.on('error', reject);
           function off() { plugin.off('error', reject); }
-          $cordovaPushV5.register().then(resolve).catch(reject).finally(off);
+          $pushV5.register().then(resolve).catch(reject).finally(off);
         });
       }).then(function (token) {
-        var old = service.getDeviceToken();
         getCache().put(DEVICE_TOKEN_CACHE_KEY, token);
         return { current: token, previous: old, hasChanged: token !== old };
       }).catch(function (error) {
@@ -192,8 +190,8 @@
      * @return {Promise} Passing the device token if any.
      */
     service.unregister = cordovaUtils.whenReady(function () {
-      if (!service.isRegistered()) { return $q.when(); }
-      return $cordovaPushV5.unregister().then(function () {
+      var promise = service.isRegistered() ? $pushV5.unregister() : $q.when();
+      return promise.then(function () {
         plugin = null;
         return getCache().remove(DEVICE_TOKEN_CACHE_KEY);
       });
@@ -230,7 +228,7 @@
     service.getBadgeNumber = cordovaUtils.whenReady(function () {
       return $q(function (resolve, reject) {
         if (!checkPlatform('ios', resolve, -1)) { return; }
-        $cordovaPushV5.getBadgeNumber().then(resolve).catch(reject);
+        $pushV5.getBadgeNumber().then(resolve).catch(reject);
       });
     });
 
@@ -244,7 +242,7 @@
       return $q(function (resolve, reject) {
         if (!checkPlatforms(['ios', 'android'], resolve, -1)) { return; }
         var ok = function () { resolve(number); };
-        return $cordovaPushV5.setBadgeNumber(number).then(ok).catch(reject);
+        return $pushV5.setBadgeNumber(number).then(ok).catch(reject);
       });
     });
 
@@ -267,7 +265,7 @@
     service.notificationHandled = cordovaUtils.whenReady(function () {
       return $q(function (resolve, reject) {
         if (!checkPlatform('ios', resolve)) { return; }
-        $cordovaPushV5.finish().then(resolve).catch(reject);
+        $pushV5.finish().then(resolve).catch(reject);
       });
     });
 
