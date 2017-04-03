@@ -8,6 +8,7 @@
    * The push notifications service.
    * @constructor
    * @param {Object} $q - The Angular $q service.
+   * @param {Object} $log - The Angular $log service.
    * @param {Object} $window - The Angular $window service.
    * @param {Object} $rootScope - The Angular $rootScope service.
    * @param {Object} $pushV5 - The ngCordova $cordovaPushV5 service.
@@ -19,6 +20,7 @@
    */
   function PushService(
     $q,
+    $log,
     $window,
     $rootScope,
     $pushV5,
@@ -35,7 +37,7 @@
     var _ = $window._;
 
     if (cordovaUtils.isCordova() && !PushNotification || !ionic || !_) {
-      throw new Error(ERRORS.MISSING_GLOBALS);
+      return $log.error(ERRORS.MISSING_GLOBALS);
     }
 
     /**
@@ -284,6 +286,7 @@
 
   module.service('pushService', [
     '$q',
+    '$log',
     '$window',
     '$rootScope',
     '$cordovaPushV5',
