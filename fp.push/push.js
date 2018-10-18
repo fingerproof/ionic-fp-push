@@ -7,7 +7,7 @@
   /**
    * Some push default settings.
    * @constant
-   * @type {Object}
+   * @type {object}
    */
   var PUSH_DEFAULT_SETTINGS = {
     android: {
@@ -25,7 +25,7 @@
   /**
    * Push error messages.
    * @constant
-   * @type {Object}
+   * @type {object}
    */
   var PUSH_ERRORS = {
     MISSING_GLOBALS: 'missing the phonegap-plugin-push, ionic or lodash',
@@ -36,7 +36,7 @@
   /**
    * Push event names.
    * @constant
-   * @type {Object}
+   * @type {object}
    */
   var PUSH_EVENTS = {
     ON_NOTIFICATION: '$cordovaPushV5:notificationReceived',

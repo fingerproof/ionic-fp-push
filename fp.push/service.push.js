@@ -7,16 +7,16 @@
   /**
    * The push notifications service.
    * @constructor
-   * @param {Object} $q - The Angular $q service.
-   * @param {Object} $log - The Angular $log service.
-   * @param {Object} $window - The Angular $window service.
-   * @param {Object} $rootScope - The Angular $rootScope service.
-   * @param {Object} $pushV5 - The ngCordova $cordovaPushV5 service.
-   * @param {Object} cacheUtils - Some caching utilities.
-   * @param {Object} cordovaUtils - Some Cordova utilities.
-   * @param {Object} DEFAULT_SETTINGS - Push default settings.
-   * @param {Object} ERRORS - Push error messages.
-   * @param {Object} EVENTS - Push event names.
+   * @param {object} $q - The Angular $q service.
+   * @param {object} $log - The Angular $log service.
+   * @param {object} $window - The Angular $window service.
+   * @param {object} $rootScope - The Angular $rootScope service.
+   * @param {object} $pushV5 - The ngCordova $cordovaPushV5 service.
+   * @param {object} cacheUtils - Some caching utilities.
+   * @param {object} cordovaUtils - Some Cordova utilities.
+   * @param {object} DEFAULT_SETTINGS - Push default settings.
+   * @param {object} ERRORS - Push error messages.
+   * @param {object} EVENTS - Push event names.
    */
   function PushService(
     $q,
@@ -44,7 +44,7 @@
      * Device token cache key.
      * @private
      * @constant
-     * @type {String}
+     * @type {string}
      */
     var DEVICE_TOKEN_CACHE_KEY = 'deviceToken';
 
@@ -60,7 +60,7 @@
      * passing `$event` as the handler second parameter.
      * @private
      * @function
-     * @param {String} event - Event name.
+     * @param {string} event - Event name.
      * @param {Function} handler - Event handler.
      * @return {Function} Deregistration function.
      */
@@ -72,7 +72,7 @@
      * Get or create the module cache.
      * @private
      * @function
-     * @return {Object}
+     * @return {object}
      */
     function getCache() { return cacheUtils.getModuleCache(module); }
 
@@ -81,7 +81,7 @@
      * @private
      * @function
      * @param {Function} reject - A promise reject function.
-     * @return {Boolean}
+     * @return {boolean}
      */
     function checkRegistration(reject) {
       if (service.isRegistered()) { return true; }
@@ -134,7 +134,7 @@
 
     /**
      * Get the cached device token, if any.
-     * @return {String|undefined}
+     * @return {string|undefined}
      */
     service.getDeviceToken = function () {
       return getCache().get(DEVICE_TOKEN_CACHE_KEY);
@@ -142,7 +142,7 @@
 
     /**
      * Check whether or not the device is registered.
-     * @return {Boolean}
+     * @return {boolean}
      */
     service.isRegistered = function () { return !!plugin; };
 
@@ -160,8 +160,7 @@
 
     /**
      * Register the device to receive notifications, get the device token.
-     * @param {Object} [options=DEFAULT_SETTINGS] - Push plugin settings.
-     * @param {String} options.android.senderID - Mandatory on Android.
+     * @param {object} [options=DEFAULT_SETTINGS] - Push plugin settings.
      * @return {Promise} Passing `{ current, previous, hasChanged }`.
      */
     service.register = cordovaUtils.whenReady(function (options) {
@@ -201,7 +200,7 @@
 
     /**
      * Subscribe to a new notifications topic.
-     * @param {String} topic - The topic name to subscribe to.
+     * @param {string} topic - The topic name to subscribe to.
      * @return {Promise}
      */
     service.subscribe = cordovaUtils.whenReady(function (topic) {
@@ -213,7 +212,7 @@
 
     /**
      * Unsubscribe from a given notifications topic.
-     * @param {String} topic - The topic name to unsubscribe from.
+     * @param {string} topic - The topic name to unsubscribe from.
      * @return {Promise}
      */
     service.unsubscribe = cordovaUtils.whenReady(function (topic) {
@@ -236,7 +235,7 @@
 
     /**
      * Set the application icon badge value.
-     * @param {Number} [number=0]
+     * @param {number} [number=0]
      * @return {Promise} Passing the number or `-1` if not supported.
      */
     service.setBadgeNumber = cordovaUtils.whenReady(function (number) {
@@ -250,7 +249,7 @@
 
     /**
      * Increment the current application icon badge value.
-     * @param {Number} [number=1]
+     * @param {number} [number=1]
      * @return {Promise} Passing the number.
      */
     service.incrementBadgeNumber = cordovaUtils.whenReady(function (number) {
