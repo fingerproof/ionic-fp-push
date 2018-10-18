@@ -11,7 +11,6 @@
    */
   var PUSH_DEFAULT_SETTINGS = {
     android: {
-      senderID: null,
       clearBadge: true
     },
     ios: {
@@ -28,8 +27,8 @@
    * @type {object}
    */
   var PUSH_ERRORS = {
-    MISSING_GLOBALS: 'missing the phonegap-plugin-push, ionic or lodash',
-    // Same error that $cordovaPushV5 throws.
+    MISSING_GLOBALS: 'missing the phonegap-plugin-push',
+    // Same error than $cordovaPushV5 throws.
     NOT_INITIALIZED: 'init must be called before any other operation'
   };
 
