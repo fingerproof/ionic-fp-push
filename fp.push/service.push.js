@@ -33,7 +33,6 @@
     var service = this;
 
     var PushNotification = $window.PushNotification;
-    var ionic = $window.ionic;
     var _ = $window._;
 
     if (cordovaUtils.isCordova() && !PushNotification) {
@@ -90,35 +89,6 @@
     }
 
     /**
-     * Check if the device is running a given platform, using a fallback value.
-     * @private
-     * @function
-     * @param {String} name - The platform name.
-     * @param {Function} resolve - A promise resolve function.
-     * @param {*} [fallback] - A fallback value to resolve with.
-     * @return {Boolean}
-     */
-    function checkPlatform(name, resolve, fallback) {
-      if (ionic.Platform.is(name)) { return true; }
-      if (_.isUndefined(fallback)) { resolve(); }
-      else { resolve(fallback); }
-      return false;
-    }
-
-    /**
-     * Same as `checkPlatform` but must match one of the given platforms.
-     * @private
-     * @function
-     * @param {Array} names - The platform names.
-     * @param {Function} resolve - A promise resolve function.
-     * @param {*} [fallback] - A fallback value to resolve with.
-     * @return {Boolean}
-     */
-    function checkPlatforms(names, resolve, fallback) {
-      return _.some(names, _.partial(checkPlatform, _, resolve, fallback));
-    }
-
-    /**
      * Attach an event handler that will be called on every notification.
      * @param {Function} handler - Passing the notification and $event.
      * @return {Function} Deregistration function for the listener.
@@ -148,11 +118,10 @@
 
     /**
      * Check whether or not the user allowed the app to receive notifications.
-     * @return {Promise} Passing `true` if allowed, `false` if not, or `null`.
+     * @return {Promise} Passing `true` if allowed, `false` if not.
      */
     service.checkPermission = cordovaUtils.whenReady(function () {
       return $q(function (resolve, reject) {
-        if (!checkPlatforms(['ios', 'android'], resolve, null)) { return; }
         var ok = function (push) { resolve(push.isEnabled); };
         PushNotification.hasPermission(ok, reject);
       });
@@ -226,61 +195,66 @@
      * Get the current application icon badge value.
      * @return {Promise} Passing the number or `-1` if not supported.
      */
-    service.getBadgeNumber = cordovaUtils.whenReady(function () {
-      return $q(function (resolve, reject) {
-        if (!checkPlatform('ios', resolve, -1)) { return; }
-        $pushV5.getBadgeNumber().then(resolve).catch(reject);
-      });
-    });
+    service.getBadgeNumber = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function () { return $pushV5.getBadgeNumber(); },
+      -1
+    );
 
     /**
      * Set the application icon badge value.
      * @param {number} [number=0]
      * @return {Promise} Passing the number or `-1` if not supported.
      */
-    service.setBadgeNumber = cordovaUtils.whenReady(function (number) {
-      if (!arguments.length) { number = 0; }
-      return $q(function (resolve, reject) {
-        if (!checkPlatforms(['ios', 'android'], resolve, -1)) { return; }
-        var ok = function () { resolve(number); };
-        return $pushV5.setBadgeNumber(number).then(ok).catch(reject);
-      });
-    });
+    service.setBadgeNumber = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function (number) {
+        if (!arguments.length) { number = 0; }
+        var ok = function () { return number; };
+        return $pushV5.setBadgeNumber(number).then(ok);
+      },
+      -1
+    );
 
     /**
      * Increment the current application icon badge value.
      * @param {number} [number=1]
      * @return {Promise} Passing the number.
      */
-    service.incrementBadgeNumber = cordovaUtils.whenReady(function (number) {
+    service.incrementBadgeNumber = function (number) {
       if (!arguments.length) { number = 1; }
-      return service.getBadgeNumber().then(function (current) {
-        return service.setBadgeNumber(current + number);
-      });
-    });
+      function ok(value) { return service.setBadgeNumber(value + number); }
+      return service.getBadgeNumber().then(ok);
+    };
 
     /**
      * Tell the OS when a background push notification has been handled.
+     * @param {string} [process] - Bakcground process id.
      * @return {Promise}
      */
-    service.notificationHandled = cordovaUtils.whenReady(function () {
-      return $q(function (resolve, reject) {
-        if (!checkPlatform('ios', resolve)) { return; }
-        $pushV5.finish().then(resolve).catch(reject);
-      });
-    });
+    service.notificationHandled = cordovaUtils.ifPlatformWhenReady(
+      'ios',
+      function (process) {
+        return $q(function (resolve, reject) {
+          if (!checkRegistration(reject)) { return; }
+          plugin.finish(resolve, reject, process);
+        });
+      }
+    );
 
     /**
      * Clear all notifications from the notification center.
      * @return {Promise}
      */
-    service.clearNotifications = cordovaUtils.whenReady(function () {
-      return $q(function (resolve, reject) {
-        var ok = checkRegistration(reject)
-          && checkPlatforms(['ios', 'android'], resolve);
-        if (ok) { plugin.clearAllNotifications(resolve, reject); }
-      });
-    });
+    service.clearNotifications = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function () {
+        return $q(function (resolve, reject) {
+          if (!checkRegistration(reject)) { return; }
+          plugin.clearAllNotifications(resolve, reject);
+        });
+      }
+    );
   }
 
   module.service('pushService', [
