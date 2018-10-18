@@ -168,6 +168,49 @@
     });
 
     /**
+     * Create a notifications channel (Android O+).
+     * @param {object} channel - Channel description object.
+     * @return {Promise} Passing `null` if not supported.
+     */
+    service.createChannel = cordovaUtils.ifPlatformWhenReady(
+      'android',
+      function (channel) {
+        return $q(function (resolve, reject) {
+          PushNotification.createChannel(resolve, reject, channel);
+        });
+      },
+      null
+    );
+
+    /**
+     * Delete an existing notifications channel (Android O+).
+     * @param {string} id - Channel id.
+     * @return {Promise}
+     */
+    service.deleteChannel = cordovaUtils.ifPlatformWhenReady(
+      'android',
+      function (id) {
+        return $q(function (resolve, reject) {
+          PushNotification.deleteChannel(resolve, reject, id);
+        });
+      }
+    );
+
+    /**
+     * List existing notifications channels (Android O+).
+     * @return {Promise} Passing `null` if not supported.
+     */
+    service.listChannels = cordovaUtils.ifPlatformWhenReady(
+      'android',
+      function () {
+        return $q(function (resolve, reject) {
+          PushNotification.listChannels(resolve, reject);
+        });
+      },
+      null
+    );
+
+    /**
      * Subscribe to a new notifications topic.
      * @param {string} topic - The topic name to subscribe to.
      * @return {Promise}
@@ -252,6 +295,21 @@
         return $q(function (resolve, reject) {
           if (!checkRegistration(reject)) { return; }
           plugin.clearAllNotifications(resolve, reject);
+        });
+      }
+    );
+
+    /**
+     * Clear a given notification from the notification center.
+     * @param {number} id - Notification id.
+     * @return {Promise}
+     */
+    service.clearNotification = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function (id) {
+        return $q(function (resolve, reject) {
+          if (!checkRegistration(reject)) { return; }
+          plugin.clearNotification(resolve, reject, id);
         });
       }
     );
