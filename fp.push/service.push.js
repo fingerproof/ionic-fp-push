@@ -7,16 +7,16 @@
   /**
    * The push notifications service.
    * @constructor
-   * @param {Object} $q - The Angular $q service.
-   * @param {Object} $log - The Angular $log service.
-   * @param {Object} $window - The Angular $window service.
-   * @param {Object} $rootScope - The Angular $rootScope service.
-   * @param {Object} $pushV5 - The ngCordova $cordovaPushV5 service.
-   * @param {Object} cacheUtils - Some caching utilities.
-   * @param {Object} cordovaUtils - Some Cordova utilities.
-   * @param {Object} DEFAULT_SETTINGS - Push default settings.
-   * @param {Object} ERRORS - Push error messages.
-   * @param {Object} EVENTS - Push event names.
+   * @param {object} $q - The Angular $q service.
+   * @param {object} $log - The Angular $log service.
+   * @param {object} $window - The Angular $window service.
+   * @param {object} $rootScope - The Angular $rootScope service.
+   * @param {object} $pushV5 - The ngCordova $cordovaPushV5 service.
+   * @param {object} cacheUtils - Some caching utilities.
+   * @param {object} cordovaUtils - Some Cordova utilities.
+   * @param {object} DEFAULT_SETTINGS - Push default settings.
+   * @param {object} ERRORS - Push error messages.
+   * @param {object} EVENTS - Push event names.
    */
   function PushService(
     $q,
@@ -33,10 +33,9 @@
     var service = this;
 
     var PushNotification = $window.PushNotification;
-    var ionic = $window.ionic;
     var _ = $window._;
 
-    if (cordovaUtils.isCordova() && !PushNotification || !ionic || !_) {
+    if (cordovaUtils.isCordova() && !PushNotification) {
       return $log.error(ERRORS.MISSING_GLOBALS);
     }
 
@@ -44,7 +43,7 @@
      * Device token cache key.
      * @private
      * @constant
-     * @type {String}
+     * @type {string}
      */
     var DEVICE_TOKEN_CACHE_KEY = 'deviceToken';
 
@@ -60,7 +59,7 @@
      * passing `$event` as the handler second parameter.
      * @private
      * @function
-     * @param {String} event - Event name.
+     * @param {string} event - Event name.
      * @param {Function} handler - Event handler.
      * @return {Function} Deregistration function.
      */
@@ -72,7 +71,7 @@
      * Get or create the module cache.
      * @private
      * @function
-     * @return {Object}
+     * @return {object}
      */
     function getCache() { return cacheUtils.getModuleCache(module); }
 
@@ -81,41 +80,12 @@
      * @private
      * @function
      * @param {Function} reject - A promise reject function.
-     * @return {Boolean}
+     * @return {boolean}
      */
     function checkRegistration(reject) {
       if (service.isRegistered()) { return true; }
       reject(new Error(ERRORS.NOT_INITIALIZED));
       return false;
-    }
-
-    /**
-     * Check if the device is running a given platform, using a fallback value.
-     * @private
-     * @function
-     * @param {String} name - The platform name.
-     * @param {Function} resolve - A promise resolve function.
-     * @param {*} [fallback] - A fallback value to resolve with.
-     * @return {Boolean}
-     */
-    function checkPlatform(name, resolve, fallback) {
-      if (ionic.Platform.is(name)) { return true; }
-      if (_.isUndefined(fallback)) { resolve(); }
-      else { resolve(fallback); }
-      return false;
-    }
-
-    /**
-     * Same as `checkPlatform` but must match one of the given platforms.
-     * @private
-     * @function
-     * @param {Array} names - The platform names.
-     * @param {Function} resolve - A promise resolve function.
-     * @param {*} [fallback] - A fallback value to resolve with.
-     * @return {Boolean}
-     */
-    function checkPlatforms(names, resolve, fallback) {
-      return _.some(names, _.partial(checkPlatform, _, resolve, fallback));
     }
 
     /**
@@ -134,7 +104,7 @@
 
     /**
      * Get the cached device token, if any.
-     * @return {String|undefined}
+     * @return {string|undefined}
      */
     service.getDeviceToken = function () {
       return getCache().get(DEVICE_TOKEN_CACHE_KEY);
@@ -142,26 +112,24 @@
 
     /**
      * Check whether or not the device is registered.
-     * @return {Boolean}
+     * @return {boolean}
      */
     service.isRegistered = function () { return !!plugin; };
 
     /**
      * Check whether or not the user allowed the app to receive notifications.
-     * @return {Promise} Passing `true` if allowed, `false` if not, or `null`.
+     * @return {Promise} Passing `true` if allowed, `false` if not.
      */
     service.checkPermission = cordovaUtils.whenReady(function () {
       return $q(function (resolve, reject) {
-        if (!checkPlatforms(['ios', 'android'], resolve, null)) { return; }
-        var ok = function (push) { resolve(push.isEnabled); };
+        function ok(push) { resolve(push.isEnabled); };
         PushNotification.hasPermission(ok, reject);
       });
     });
 
     /**
      * Register the device to receive notifications, get the device token.
-     * @param {Object} [options=DEFAULT_SETTINGS] - Push plugin settings.
-     * @param {String} options.android.senderID - Mandatory on Android.
+     * @param {object} [options=DEFAULT_SETTINGS] - Push plugin settings.
      * @return {Promise} Passing `{ current, previous, hasChanged }`.
      */
     service.register = cordovaUtils.whenReady(function (options) {
@@ -200,8 +168,51 @@
     });
 
     /**
+     * Create a notifications channel (Android O+).
+     * @param {object} channel - Channel description object.
+     * @return {Promise} Passing `null` if not supported.
+     */
+    service.createChannel = cordovaUtils.ifPlatformWhenReady(
+      'android',
+      function (channel) {
+        return $q(function (resolve, reject) {
+          PushNotification.createChannel(resolve, reject, channel);
+        });
+      },
+      null
+    );
+
+    /**
+     * Delete an existing notifications channel (Android O+).
+     * @param {string} id - Channel id.
+     * @return {Promise}
+     */
+    service.deleteChannel = cordovaUtils.ifPlatformWhenReady(
+      'android',
+      function (id) {
+        return $q(function (resolve, reject) {
+          PushNotification.deleteChannel(resolve, reject, id);
+        });
+      }
+    );
+
+    /**
+     * List existing notifications channels (Android O+).
+     * @return {Promise} Passing `null` if not supported.
+     */
+    service.listChannels = cordovaUtils.ifPlatformWhenReady(
+      'android',
+      function () {
+        return $q(function (resolve, reject) {
+          PushNotification.listChannels(resolve, reject);
+        });
+      },
+      null
+    );
+
+    /**
      * Subscribe to a new notifications topic.
-     * @param {String} topic - The topic name to subscribe to.
+     * @param {string} topic - The topic name to subscribe to.
      * @return {Promise}
      */
     service.subscribe = cordovaUtils.whenReady(function (topic) {
@@ -213,7 +224,7 @@
 
     /**
      * Unsubscribe from a given notifications topic.
-     * @param {String} topic - The topic name to unsubscribe from.
+     * @param {string} topic - The topic name to unsubscribe from.
      * @return {Promise}
      */
     service.unsubscribe = cordovaUtils.whenReady(function (topic) {
@@ -227,61 +238,81 @@
      * Get the current application icon badge value.
      * @return {Promise} Passing the number or `-1` if not supported.
      */
-    service.getBadgeNumber = cordovaUtils.whenReady(function () {
-      return $q(function (resolve, reject) {
-        if (!checkPlatform('ios', resolve, -1)) { return; }
-        $pushV5.getBadgeNumber().then(resolve).catch(reject);
-      });
-    });
+    service.getBadgeNumber = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function () { return $pushV5.getBadgeNumber(); },
+      -1
+    );
 
     /**
      * Set the application icon badge value.
-     * @param {Number} [number=0]
+     * @param {number} [number=0]
      * @return {Promise} Passing the number or `-1` if not supported.
      */
-    service.setBadgeNumber = cordovaUtils.whenReady(function (number) {
-      if (!arguments.length) { number = 0; }
-      return $q(function (resolve, reject) {
-        if (!checkPlatforms(['ios', 'android'], resolve, -1)) { return; }
-        var ok = function () { resolve(number); };
-        return $pushV5.setBadgeNumber(number).then(ok).catch(reject);
-      });
-    });
+    service.setBadgeNumber = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function (number) {
+        if (!arguments.length) { number = 0; }
+        function ok() { return number; };
+        return $pushV5.setBadgeNumber(number).then(ok);
+      },
+      -1
+    );
 
     /**
      * Increment the current application icon badge value.
-     * @param {Number} [number=1]
+     * @param {number} [number=1]
      * @return {Promise} Passing the number.
      */
-    service.incrementBadgeNumber = cordovaUtils.whenReady(function (number) {
+    service.incrementBadgeNumber = function (number) {
       if (!arguments.length) { number = 1; }
-      return service.getBadgeNumber().then(function (current) {
-        return service.setBadgeNumber(current + number);
-      });
-    });
+      function ok(value) { return service.setBadgeNumber(value + number); }
+      return service.getBadgeNumber().then(ok);
+    };
 
     /**
      * Tell the OS when a background push notification has been handled.
+     * @param {string} [process] - Bakcground process id.
      * @return {Promise}
      */
-    service.notificationHandled = cordovaUtils.whenReady(function () {
-      return $q(function (resolve, reject) {
-        if (!checkPlatform('ios', resolve)) { return; }
-        $pushV5.finish().then(resolve).catch(reject);
-      });
-    });
+    service.notificationHandled = cordovaUtils.ifPlatformWhenReady(
+      'ios',
+      function (process) {
+        return $q(function (resolve, reject) {
+          if (!checkRegistration(reject)) { return; }
+          plugin.finish(resolve, reject, process);
+        });
+      }
+    );
 
     /**
      * Clear all notifications from the notification center.
      * @return {Promise}
      */
-    service.clearNotifications = cordovaUtils.whenReady(function () {
-      return $q(function (resolve, reject) {
-        var ok = checkRegistration(reject)
-          && checkPlatforms(['ios', 'android'], resolve);
-        if (ok) { plugin.clearAllNotifications(resolve, reject); }
-      });
-    });
+    service.clearNotifications = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function () {
+        return $q(function (resolve, reject) {
+          if (!checkRegistration(reject)) { return; }
+          plugin.clearAllNotifications(resolve, reject);
+        });
+      }
+    );
+
+    /**
+     * Clear a given notification from the notification center.
+     * @param {number} id - Notification id.
+     * @return {Promise}
+     */
+    service.clearNotification = cordovaUtils.ifPlatformWhenReady(
+      ['ios', 'android'],
+      function (id) {
+        return $q(function (resolve, reject) {
+          if (!checkRegistration(reject)) { return; }
+          plugin.clearNotification(resolve, reject, id);
+        });
+      }
+    );
   }
 
   module.service('pushService', [

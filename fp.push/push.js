@@ -7,11 +7,10 @@
   /**
    * Some push default settings.
    * @constant
-   * @type {Object}
+   * @type {object}
    */
   var PUSH_DEFAULT_SETTINGS = {
     android: {
-      senderID: null,
       clearBadge: true
     },
     ios: {
@@ -25,18 +24,18 @@
   /**
    * Push error messages.
    * @constant
-   * @type {Object}
+   * @type {object}
    */
   var PUSH_ERRORS = {
-    MISSING_GLOBALS: 'missing the phonegap-plugin-push, ionic or lodash',
-    // Same error that $cordovaPushV5 throws.
+    MISSING_GLOBALS: 'missing the phonegap-plugin-push',
+    // Same error than $cordovaPushV5 throws.
     NOT_INITIALIZED: 'init must be called before any other operation'
   };
 
   /**
    * Push event names.
    * @constant
-   * @type {Object}
+   * @type {object}
    */
   var PUSH_EVENTS = {
     ON_NOTIFICATION: '$cordovaPushV5:notificationReceived',
