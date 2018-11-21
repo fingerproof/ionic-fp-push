@@ -122,7 +122,7 @@
      */
     service.checkPermission = cordovaUtils.whenReady(function () {
       return $q(function (resolve, reject) {
-        function ok(push) { resolve(push.isEnabled); };
+        function ok(push) { resolve(push.isEnabled); }
         PushNotification.hasPermission(ok, reject);
       });
     });
@@ -253,7 +253,7 @@
       ['ios', 'android'],
       function (number) {
         if (!arguments.length) { number = 0; }
-        function ok() { return number; };
+        function ok() { return number; }
         return $pushV5.setBadgeNumber(number).then(ok);
       },
       -1
